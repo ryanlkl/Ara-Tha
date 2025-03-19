@@ -116,7 +116,8 @@ class BeesAlgorithm_GRN:
 
                 for _ in range(self.number_of_attractors):
                     temp_point = list(map(int, infile.readline().split()))
-                    fixed_points.append(bool_to_int(nodes, temp_point))
+                    fixed_points.append(temp_point)
+                    print("Fixed points: ", temp_point)
 
             return fixed_points
         except FileNotFoundError:
@@ -170,6 +171,7 @@ class BeesAlgorithm_GRN:
         best_coords = best_solution.values
         curr_sites = optimiser.current_sites
 
+        print(best_solution)
         print(best_fitness)
         print(best_coords)
         print(curr_sites)

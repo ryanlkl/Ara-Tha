@@ -23,7 +23,6 @@ def main():
         if answer.lower() == "run":
             stop = True
             solver.bees_algorithm()
-            solver.display_results()
         elif answer.lower() == "test":
             stop = True
             solutions = input("How many solutions? ")
