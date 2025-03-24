@@ -4,6 +4,7 @@ import numpy as np
 from bees_algorithm import BeesAlgorithm
 from collections import Counter
 import matplotlib.pyplot as plt
+import time
 
 class BooleanNetwork:
     def __init__(self, W, Theta):
@@ -315,10 +316,16 @@ def run_optimization(n):
 
     return best_score_overall, best_W_overall, best_Theta_overall, valid_networks, all_total_edges, all_positive_edges, all_negative_edges
 
-
+start = time.time()
 # Run optimization n times sequentially
-n = 1000  # Set the number of optimization runs
+n = 10  # Set the number of optimization runs
 best_score, best_W, best_Theta, valid_networks, all_total_edges, all_positive_edges, all_negative_edges = run_optimization(n)
+end = time.time()
+
+diff = end - start
+
+print(f"Time (min): {diff / 60}")
+
 print("Valid: ", valid_networks)
 try:
     with open("runFiles/results/valid_networks.txt", "a") as f:
@@ -330,7 +337,7 @@ except Exception as e:
 
 try:
     with open("runFiles/results/best_networks.txt", "a") as f:
-        f.write(f"W:\n{best_W}\nTheta: \n{best_Theta}\n\n")
+        f.write(f"W:\n{best_W}\nTheta: \n{best_Theta}\nNumber of Edges: {np.count_nonzero(best_W)}\n\n")
 except Exception as e:
     print(f"Error: {e}")
 
