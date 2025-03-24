@@ -318,7 +318,7 @@ def run_optimization(n):
 
 start = time.time()
 # Run optimization n times sequentially
-n = 10  # Set the number of optimization runs
+n = 25  # Set the number of optimization runs
 best_score, best_W, best_Theta, valid_networks, all_total_edges, all_positive_edges, all_negative_edges = run_optimization(n)
 end = time.time()
 
@@ -351,20 +351,6 @@ plt.xlabel("Total Number of Edges")
 plt.ylabel("Frequency")
 plt.title("Total Number of Edges")
 
-# Histogram for positive edges
-plt.subplot(1, 3, 2)
-plt.hist(all_positive_edges, bins=10, color='green', alpha=0.7)
-plt.xlabel("Positive Edges")
-plt.ylabel("Frequency")
-plt.title("Positive Edges")
-
-# Histogram for negative edges
-plt.subplot(1, 3, 3)
-plt.hist(all_negative_edges, bins=10, color='red', alpha=0.7)
-plt.xlabel("Negative Edges")
-plt.ylabel("Frequency")
-plt.title("Negative Edges")
-
 # Adjust layout for better spacing
 plt.tight_layout()
 
@@ -375,12 +361,12 @@ plt.show()
 best_network_model = BooleanNetwork(best_W, best_Theta)
 
 # Visualize the basin sizes
-basin_sizes = calculate_basin_sizes(best_network_model)
-attractor_labels = [str(k) for k in basin_sizes.keys()]
-plt.bar(attractor_labels, basin_sizes.values())
-plt.xlabel('Attractors')
-plt.ylabel('Basin Size')
-plt.title('Attractor Basin Sizes')
-plt.xticks(rotation=45)
-plt.tight_layout()
-plt.show()
+# basin_sizes = calculate_basin_sizes(best_network_model)
+# attractor_labels = [str(k) for k in basin_sizes.keys()]
+# plt.bar(attractor_labels, basin_sizes.values())
+# plt.xlabel('Attractors')
+# plt.ylabel('Basin Size')
+# plt.title('Attractor Basin Sizes')
+# plt.xticks(rotation=45)
+# plt.tight_layout()
+# plt.show()
