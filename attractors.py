@@ -292,7 +292,7 @@ def run_optimization(n):
             useSimplifiedParameters=False
         )
 
-        iterations, best_score = bee_optimizer.performFullOptimisation(max_iteration=5000, verbose=1)
+        iterations, best_score = bee_optimizer.performFullOptimisation(max_iteration=1000, verbose=1)
         best_params = bee_optimizer.best_solution.values
         best_W = np.array(best_params[:144]).reshape(12, 12)
         best_Theta = np.array(best_params[144:])
@@ -325,7 +325,7 @@ def run_optimization(n):
 
 start = time.time()
 # Run optimization n times sequentially
-n = 1  # Set the number of optimization runs
+n = 20  # Set the number of optimization runs
 best_score, best_W, best_Theta, valid_networks, all_total_edges, all_positive_edges, all_negative_edges = run_optimization(n)
 end = time.time()
 
@@ -364,21 +364,18 @@ plt.tight_layout()
 # Show the histograms
 plt.show()
 
-def find_attractors(network, sample_size=None):
+def find_attractors(network):
     fixed_points = {}
     num_nodes = network.n
 
-    # All possible initial binary states (or random sample)
-    if sample_size:
-        initial_states = [np.random.randint(0, 2, num_nodes).tolist() for _ in range(sample_size)]
-    else:
-        initial_states = [list(map(int, format(i, f'0{num_nodes}b'))) for i in range(2 ** num_nodes)]
-
-    for state in initial_states:
+    # Generate all 2^n binary combinations
+    for i in range(2 ** num_nodes):
+        state = list(map(int, format(i, f'0{num_nodes}b')))
         next_state = network.update(state)
-        if next_state == state:
+
+        if np.array_equal(next_state, state):
             state_tuple = tuple(state)
-            fixed_points.setdefault(state_tuple, []).append(0)  # 0 steps to fix point
+            fixed_points.setdefault(state_tuple, []).append(0)  # 0 steps, fixed immediately
 
     return fixed_points
 
@@ -386,7 +383,7 @@ def find_attractors(network, sample_size=None):
 final_network = AttractorBooleanNetwork(best_W, best_Theta)
 
 # Use the full space (4096) or a sample (e.g., 1000)
-attractors_dict = find_attractors(final_network, max_steps=500)
+attractors_dict = find_attractors(final_network)
 print(len(attractors_dict))
 
 def format_attractor_label(attractor):

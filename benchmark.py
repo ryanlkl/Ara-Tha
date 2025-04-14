@@ -6,8 +6,6 @@ from collections import Counter
 import matplotlib.pyplot as plt
 import time
 import benchmark_functions as bf
-from test_attractors import AttractorBooleanNetwork
-from collections import Counter
 
 class BooleanNetwork:
     def __init__(self, W, Theta):
@@ -18,8 +16,8 @@ class BooleanNetwork:
     def update(self, state):
         """Update state using parallel synchronous rule."""
         weighted_sum = np.dot(self.W, state)
-        binary = (weighted_sum > self.Theta).astype(int)
-        return np.clip(binary, 0, 1)  # Just in case
+        # Return 1 for activation (positive sum) and -1 for repression (negative sum)
+        return np.sign(weighted_sum - self.Theta).astype(int)  # Vectorized update
     
     def simulate(self, initial_state, max_steps=500):
         """Simulate network until all attractors are found."""
@@ -273,14 +271,15 @@ def run_optimization(n):
     
     func = bf.Schwefel(n_dimensions=2)
     lb, ub = func.suggested_bounds()
+    func.show()
 
     for i in range(n):
         print(f"Optimization run {i+1} of {n}...")
 
         bee_optimizer = BeesAlgorithm(
             score_function=fitness_function,
-            range_min=[-5] * 156,
-            range_max=[5] * 156,
+            range_min=lb,
+            range_max=ub,
             ns=50,
             nb=20,
             ne=5,
@@ -292,7 +291,11 @@ def run_optimization(n):
             useSimplifiedParameters=False
         )
 
-        iterations, best_score = bee_optimizer.performFullOptimisation(max_iteration=5000, verbose=1)
+        iterations, best_score = bee_optimizer.performFullOptimisation(max_iteration=1000, verbose = 1)
+
+        local_minimum = bee_optimizer.best_solution.values
+        print((func(local_minimum), local_minimum))
+        print(func.minimum())
         best_params = bee_optimizer.best_solution.values
         best_W = np.array(best_params[:144]).reshape(12, 12)
         best_Theta = np.array(best_params[144:])
@@ -364,90 +367,17 @@ plt.tight_layout()
 # Show the histograms
 plt.show()
 
-def find_attractors(network, sample_size=None):
-    fixed_points = {}
-    num_nodes = network.n
+# Evaluate results for the best network found
+best_network_model = BooleanNetwork(best_W, best_Theta)
 
-    # All possible initial binary states (or random sample)
-    if sample_size:
-        initial_states = [np.random.randint(0, 2, num_nodes).tolist() for _ in range(sample_size)]
-    else:
-        initial_states = [list(map(int, format(i, f'0{num_nodes}b'))) for i in range(2 ** num_nodes)]
+# Visualize the basin sizes
+# basin_sizes = calculate_basin_sizes(best_network_model)
+# attractor_labels = [str(k) for k in basin_sizes.keys()]
+# plt.bar(attractor_labels, basin_sizes.values())
+# plt.xlabel('Attractors')
+# plt.ylabel('Basin Size')
+# plt.title('Attractor Basin Sizes')
+# plt.xticks(rotation=45)
+# plt.tight_layout()
+# plt.show()
 
-    for state in initial_states:
-        next_state = network.update(state)
-        if next_state == state:
-            state_tuple = tuple(state)
-            fixed_points.setdefault(state_tuple, []).append(0)  # 0 steps to fix point
-
-    return fixed_points
-
-# Create final Boolean network with the best W and Theta
-final_network = AttractorBooleanNetwork(best_W, best_Theta)
-
-# Use the full space (4096) or a sample (e.g., 1000)
-attractors_dict = find_attractors(final_network, max_steps=500)
-print(len(attractors_dict))
-
-def format_attractor_label(attractor):
-    # If it's a cycle (tuple of tuples)
-    if isinstance(attractor, (tuple, list)) and all(isinstance(x, (tuple, list, np.ndarray)) for x in attractor):
-        return ' → '.join(''.join(str(int(i)) for i in state) for state in attractor)
-    else:
-        return ''.join(str(int(x)) for x in attractor)
-
-# Store attractor frequencies as label → count
-label_counter = Counter()
-steps_to_attractor = []
-
-for attractor, steps_list in attractors_dict.items():
-    steps_to_attractor.extend(steps_list)
-
-    if isinstance(attractor[0], (tuple, list, np.ndarray)):
-        # It's a cycle → count each state individually
-        for state in attractor:
-            label = ''.join(str(int(x)) for x in state)
-            label_counter[label] += len(steps_list)  # Add full count to each state
-    else:
-        # It's a fixed point
-        label = ''.join(str(int(x)) for x in attractor)
-        label_counter[label] += len(steps_list)
-
-# Unpack label and count for plotting
-attractor_labels = list(label_counter.keys())
-attractor_counts = list(label_counter.values())
-
-# Bar chart of attractor frequencies
-plt.figure(figsize=(12, 6))
-plt.bar(attractor_labels, attractor_counts)
-plt.xticks(rotation=90)
-plt.title("Frequency of Unique Attractors")
-plt.xlabel("Attractor")
-plt.ylabel("Count")
-plt.tight_layout()
-plt.show()
-
-# Convert target attractors to strings
-target_labels = set(''.join(str(i) for i in a) for a in target_attractors)
-
-# Check found attractors
-matched = []
-unmatched = []
-
-for label in label_counter:
-    if label in target_labels:
-        matched.append(label)
-    else:
-        unmatched.append(label)
-
-print(f"✅ Matched attractors: {len(matched)}")
-print(f"❌ Unmatched attractors: {len(unmatched)}")
-
-# Optional: show which ones matched
-print("Matched:")
-for m in matched:
-    print(f"  - {m}")
-
-print("Unmatched:")
-for u in unmatched:
-    print(f"  - {u}")
